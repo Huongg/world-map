@@ -1,5 +1,27 @@
+/*html {
+	min-width: 100%;
+	min-height: 100%;
+}*/
 body {
   margin: 0;
   padding: 0;
   font-family: sans-serif;
+  background-color: #F9F9F3;
+}
+
+.App {
+  text-align: center;
+  margin: 70px 0;
+}
+
+.countries {
+	fill: #12EA00;
+}
+
+svg {
+	vertical-align: middle;
+    text-align:center;
+    left:15%;
+    position:relative; /*makes left effective*/
+    display:table-cell;
 }
