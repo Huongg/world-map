@@ -14,14 +14,14 @@ body {
   margin: 70px 0;
 }
 
-.countries {
+/*.countries {
 	fill: #12EA00;
-}
+}*/
 
 svg {
 	vertical-align: middle;
     text-align:center;
     left:15%;
-    position:relative; /*makes left effective*/
+    position:relative; 
     display:table-cell;
 }

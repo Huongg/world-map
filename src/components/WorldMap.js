@@ -1,11 +1,12 @@
 import React, { Component } from 'react'
 import '../style.css'
 import worldData from '../utils/worldData.js'
+import colourVisitedCountries from '../utils/visitedCountries.js'
 import { geoPath, geoOrthographic } from 'd3-geo'
 import { timer } from 'd3-timer'
 import { select } from 'd3-selection'
 
-class WorldMap extends Component {
+class WorldMap extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
@@ -22,19 +23,15 @@ class WorldMap extends Component {
 		this.geoGenerator = geoPath().projection(this.projection);
 		this.svg = select("svg");
 
-		// this.createWorldMap = this.createWorldMap.bind(this);
-		// this.spinning = this.spinning.bind(this);
-
-
 	}
 
 	componentDidMount() {
-      this.createWorldMap();
-      this.spinning();
+      // this.createWorldMap();
+      // this.spinning();
    }
 
    componentDidUpdate() {
-      this.createWorldMap();
+      // this.createWorldMap();
    }
 
    spinning() {
@@ -44,7 +41,7 @@ class WorldMap extends Component {
 
        let time = Date.now();
        const rotate = [0, 0];
-	   const velocity = [.015, -0];
+	   const velocity = [.008, -0];
 
 	   timer(function() {
 
@@ -59,26 +56,50 @@ class WorldMap extends Component {
 	   });
    }
 
-	createWorldMap() {		 
-      	const countries = worldData.features
-      							   .map((d,i) => 
-      							   		<path
-								         key={'path' + i}
-								         d={this.geoGenerator(d)}
-								         className='countries'
-								        />
-      							   	)
-      	return countries;
+   symbolVisitedCountries(country, styling) {
+	  const visitedCountries= ["Vietnam", "Thailand", "Maylaysia", "Singapore", "Cambodia", "Laos", "Indonesia",
+	                   "England", "France", "Italy", "Monica", "Switzerland", "South Africa", 
+	                   "America", "China"];
+
+	    for (let i=0 ; i<visitedCountries.length ; i++) {
+	    	if((visitedCountries[i]).includes(country)) {
+	    		if(styling == "colouring") {
+	    			return "#e7d8ad";
+	    		} else if (styling == "symboling"){
+	    			return "../../assets/location-pointer.png";
+	    		}
+	    		
+	    	}
+	    }
+	    return "#12EA00";
+
 	}
+
+	createWorldMap() {	 
+		const countries = worldData.features
+      							   .map((d,i) => {
+      							   		return (
+      							   			<path
+      							   				key= {'path' + i}
+												d = {this.geoGenerator(d)}
+												fill= {this.symbolVisitedCountries(d.properties.name, "colouring")}
+											
+      							   			/>
+      							   		 
+										)
+      							   	});
+      	return countries;    	
+	}
+
 
 	render() {
 
+      	
 		
 		return (
 			<svg width="820" height="620">
-					<circle className="circle" cx={this.translateX} cy={this.translateY} r="300" fill="#1C70C8"></circle>
-						{this.createWorldMap()}
-					
+				<circle className="circle" cx={this.translateX} cy={this.translateY} r="300" fill="#1C70C8"></circle>
+				{this.createWorldMap()}
 			</svg>)
 		}
 }
