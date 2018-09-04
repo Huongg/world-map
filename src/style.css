@@ -14,9 +14,6 @@ body {
   margin: 70px 0;
 }
 
-/*.countries {
-	fill: #12EA00;
-}*/
 
 svg {
 	vertical-align: middle;
@@ -24,4 +21,8 @@ svg {
     left:15%;
     position:relative; 
     display:table-cell;
+}
+
+.active {
+    fill: #98f5ff;
 }
