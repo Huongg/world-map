@@ -2,9 +2,9 @@ import React, { Component } from 'react'
 import '../style.css'
 import worldData from '../utils/worldData.js'
 import colourVisitedCountries from '../utils/visitedCountries.js'
-import { geoPath, geoOrthographic } from 'd3-geo'
+import { geoPath, geoOrthographic, centroid } from 'd3-geo'
 import { timer } from 'd3-timer'
-import { select } from 'd3-selection'
+import { select, mouse } from 'd3-selection'
 
 class WorldMap extends React.Component {
 	constructor(props) {
@@ -13,8 +13,7 @@ class WorldMap extends React.Component {
 			timeDelta: 0,
 			startTime: Date.now(),
 			startedSpinning: false,
-			selectedCountry: null,
-			centered: null
+			tooltip: null
 		};
 		this.translateX = 820/2 + 100;
 		this.translateY = 620/2
@@ -27,10 +26,20 @@ class WorldMap extends React.Component {
 		this.geoGenerator = geoPath().projection(this.projection);
 		this.svg = select("svg");
 
+		this.tooltip = select("body") //for hover
+		  .append("div")
+		  .attr("class", "tooltip hidden");
+		  
+		this.tooltip_point = select("body") //for click
+		    .append("div")
+		    .attr("class", "tooltip_point hidden");
+
 		this.width = window.innerWidth;
     	this.height = window.innerHeight;
 
-		this.handleCountryClick = this.handleCountryClick.bind(this)
+		this.handleCountryClick = this.handleCountryClick.bind(this);
+		this.handleMouseEnter = this.handleMouseEnter.bind(this);
+		this.handleMouseLeave= this.handleMouseLeave.bind(this);
 
 	}
 
@@ -96,7 +105,32 @@ class WorldMap extends React.Component {
 	  
 	//   var popupContent = function(d) { return d.properties.text; }
 
-   initSpinner() {
+	// showTooltipPoint(d) {
+	// 	let mouse = mouse(this.svg.node()).map(function(d) {
+ //                        return parseInt(d);
+	// 	            });
+	// 	this.tooltip_point.classed('hidden', false) //make tooltip visible
+	// 					  .html(d.properties.name) //display the name of point
+	// 					  .attr('style', //set size of the tooltip
+	// 	                        'left:' + (mouse[0] + 15) + 'px; top:' + (mouse[1] - 35) + 'px')
+	// }
+
+	// // hide point tooltip
+	// hideTooltipPoint(d) {
+	//   this.tooltip_point.classed('hidden', true);
+	// }
+
+	handleMouseEnter(d) {
+		console.log("OVER", d);
+	    this.setState({tooltip: d})
+	}
+
+	handleMouseLeave() {
+		console.log("LEAVE");
+	    this.setState({tooltip: null})
+	}
+
+    initSpinner() {
    	   // Configuration for the spinning effect
    	    let objState = this;
        	let projectionClosed = objState.projection;
@@ -138,46 +172,98 @@ class WorldMap extends React.Component {
 		const countries = worldData.features
       							   .map((d,i) => {
       							   		return (
-      							   			<RenderingPath 
+      							   			<Countries 
       							   				key= {"path" + i}
 												d = { this.geoGenerator(d) }
 												fill= { this.symbolVisitedCountries(d.properties.name) }
 												onClick={ () => this.handleCountryClick(d) }
-												text= {d.properties.name}
+												onMouseEnter={ () => this.handleMouseEnter(d) }
+												onMouseLeave={ this.handleMouseLeave }
+												
       							   			/>
 										)
       							   	});	
+      	const labels = worldData.features
+      							   .map((d,i) => {
+      							   		return (
+      							   			<Labels 
+												cx= {this.geoGenerator.centroid(d)[0]}
+												cy= {this.geoGenerator.centroid(d)[1]}
+												id= {d.id}
+												area= {this.geoGenerator.area(d)}
+      							   			/>
+										)
+      							   	});	
+
+      	let tooltip = null;
+      	if(this.state.tooltip) {
+      		let [x,y] = this.geoGenerator.centroid(this.state.tooltip);
+			let tooltipData = {
+				x: x, 
+				y: y, 
+				label: this.state.tooltip.properties.name
+			};
+			tooltip = <Tooltips tooltip={tooltipData} />;
+			console.log(tooltipData);
+      	}
+      	
 		return (
+
 			<svg width="820" height="620">
 				<circle className="circle" cx={this.translateX} cy={this.translateY} r="300" fill="#1C70C8"></circle>
 				{countries}
+				{labels}
+				{tooltip}
 			</svg>
 		)
 	}
 }
 
-class RenderingPath extends React.Component {
-	constructor(props){
-	    super(props);
-	}
-
+class Countries extends React.Component {
 	render() {
 		return(
-			<path className= "country" key= {this.props.key} d={this.props.d}
-				  fill= {this.props.fill} stroke= "#FFFFFF" strokeWidth ="0.5"
-				  onClick={this.props.onClick}>
-				
-				<text fill="red">
-				    <textPath xlinkHref={this.props.key}>
-				      {this.props.text}
-				    </textPath>
-			    </text>
-			
-			</path>
+			<g>
+				<path className= "country" key= {this.props.key} d={this.props.d}
+					  fill= {this.props.fill} stroke= "#FFFFFF" strokeWidth ="0.5"
+					  onClick={this.props.onClick} onMouseEnter={this.props.onMouseEnter} onMouseLeave={this.props.onMouseLeave}>
+				</path> 				
+			</g>
 		)
 	}
 }
 
+class Labels extends React.Component {
+	render() {
+		return(
+			<g>
+				{
+					(this.props.area > 400) 
+					? <text className="countriesIDs" x={this.props.cx} y={this.props.cy} alignmentBaseline="middle" textAnchor="middle">
+						{this.props.id}
+				       </text>
+			    	:
+
+			    	(this.props.area > 50)
+			    	? <circle r="2" cx={this.props.cx} cy={this.props.cy}> </circle>
+			    	: null
+				}				
+			</g>
+		)
+	}
+}
+
+class Tooltips extends React.Component {
+	render() {
+		let { tooltip } = this.props;
+    	let { x, y, label } = tooltip;
+		return (
+			<g style={{pointerEvents: "none"}}>
+				<rect x={x+20} y={y-30} height="30" width="60"></rect>
+				<text x={x+40} y={y-10} textAnchor="middle" alignmentBaseline="middle" style={{"color": "white"}}> {label} </text>
+			</g>
+		)
+	}
+}
 
 
 export default WorldMap;

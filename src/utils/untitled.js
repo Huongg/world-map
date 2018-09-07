@@ -1,4 +1,4 @@
-let worldData = {
+	let worldData = {
 		"type": "FeatureCollection",
     	"features": [
     	  {
@@ -25,4 +25,13 @@ let worldData = {
 		]
 }
 
+<path
+      							   				key= {"path" + i}
+												d = { this.geoGenerator(d) }
+												fill= { this.symbolVisitedCountries(d.properties.name) }
+												onClick={ () => this.handleCountryClick(d) }
+												text= {d.properties.name}
+      							   			/>
+
 worldData.features.map((d,i) => d.properties.name);
+
