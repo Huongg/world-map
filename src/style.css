@@ -10,12 +10,35 @@ body {
 }
 
 .App {
-  text-align: center;
   margin: 70px 0;
+  display: flex;
+    flex-direction: row;
+    justify-content: center;
+    text-align: center;
 }
 
- .hidden {
-    display: none !important;
+
+.categories {
+	margin-top: 12%;
+}
+
+
+.box1 {
+	width: 300px;
+	height: 10px;
+	padding: 30px;
+    border: 2px solid;
+    border-radius: 5px;
+    background-color: #e7d8ad;
+}
+
+.box2 {
+	width: 300px;
+	height: 10px;
+	padding: 30px;
+    border: 2px solid;
+    border-radius: 5px;
+    background-color: #12EA00;
 }
 
 div.tooltip {
@@ -47,11 +70,15 @@ div.tooltip_point {
 
 rect {
 	padding:2px 5px;
-    background: #DEB887;
+   	fill: red;
     opacity:0.8;
-    color: #f46b6b;
+ 	border-radius: 5px;
 }
 
 .countriesIDs {
 	font-size: 12px;
+	font-family: bold;
 }
+
+
+

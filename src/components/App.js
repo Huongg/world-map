@@ -1,12 +1,15 @@
 import React, { Component } from 'react';
-import WorldMap from './WorldMap.js'
+import WorldMap from './WorldMap.js';
+import Categories from './Categories.js';
 
 class App extends Component {
   render() {
     return (
       <div className="App">
-        <WorldMap />       
-      </div>)
+        <Categories />
+        <WorldMap />  
+      </div>
+    )
   }
 }
 

@@ -6,6 +6,8 @@ import { geoPath, geoOrthographic, centroid } from 'd3-geo'
 import { timer } from 'd3-timer'
 import { select, mouse } from 'd3-selection'
 
+const defaultSize = 820;
+
 class WorldMap extends React.Component {
 	constructor(props) {
 		super(props);
@@ -15,8 +17,8 @@ class WorldMap extends React.Component {
 			startedSpinning: false,
 			tooltip: null
 		};
-		this.translateX = 820/2 + 100;
-		this.translateY = 620/2
+		this.translateX = defaultSize/2 + 100;
+		this.translateY = defaultSize/2
 		this.projection = geoOrthographic()
 						   .scale(300)
 						   .translate([this.translateX, this.translateY])
@@ -25,14 +27,6 @@ class WorldMap extends React.Component {
 
 		this.geoGenerator = geoPath().projection(this.projection);
 		this.svg = select("svg");
-
-		this.tooltip = select("body") //for hover
-		  .append("div")
-		  .attr("class", "tooltip hidden");
-		  
-		this.tooltip_point = select("body") //for click
-		    .append("div")
-		    .attr("class", "tooltip_point hidden");
 
 		this.width = window.innerWidth;
     	this.height = window.innerHeight;
@@ -51,82 +45,25 @@ class WorldMap extends React.Component {
    handleCountryClick(d) {
    	
    		this.setState({
-	      	startedSpinning: !this.state.startedSpinning
+	      	startedSpinning: !this.state.startedSpinning,
+	      	tooltip: d
 	    });
    		// when the globe's stopped spinning, update the startTime to be at the point when its stopped
    		if(!this.state.startedSpinning){
    			this.setState({
    				startTime : Date.now() - this.state.timeDelta,
-   				// selectedCountry: d.properties.name
+   				tooltip: null
    			});
    		} 
-
-   		console.log(`This is: ${d.properties.name}`);
-
-   		// let x, y, k;
-   		//if not centered into that country
-   		// if (d && this.state.centered !== d) {
-   		// 	let centroid = this.geoGenerator.centroid(d); //get center of country
-     //    	let bounds = this.geoGenerator.bounds(d); //get bounds of country
-     //    	let dx = bounds[1][0] - bounds[0][0]; //get bounding box
-     //        let	dy = bounds[1][1] - bounds[0][1];
-
-     //        //get transformation values
-	    //     x = (bounds[0][0] + bounds[1][0]) / 2;
-	    //     y = (bounds[0][1] + bounds[1][1]) / 2;
-	    //     k = Math.min(this.width / dx, this.height / dy);
-
-	    //     this.setState({
-	    //     	centered : d,
-	    //     	selectedCountry : d
-	    //  	});
-
-   		// } else {
-   		// 	//else reset to world view
-	    //     x = this.width / 2;
-	    //     y = this.height / 2;
-	    //     k = 1;
-
-	    //     this.setState({ centered : null });
-   		// }
-
-   		// let country = document.getElementsByClassName("country");
-
-
    }
 
- //    popupContent() {
-	//   var width = 700;
-	//   var height = 700;
-	//   var scale = 1200 * 5;
-	//   var scaleExtent = [1 << 12, 1 << 13]
-	//   var center = [122, 23.5];
-	// }
-	  
-	//   var popupContent = function(d) { return d.properties.text; }
 
-	// showTooltipPoint(d) {
-	// 	let mouse = mouse(this.svg.node()).map(function(d) {
- //                        return parseInt(d);
-	// 	            });
-	// 	this.tooltip_point.classed('hidden', false) //make tooltip visible
-	// 					  .html(d.properties.name) //display the name of point
-	// 					  .attr('style', //set size of the tooltip
-	// 	                        'left:' + (mouse[0] + 15) + 'px; top:' + (mouse[1] - 35) + 'px')
-	// }
-
-	// // hide point tooltip
-	// hideTooltipPoint(d) {
-	//   this.tooltip_point.classed('hidden', true);
-	// }
 
 	handleMouseEnter(d) {
-		console.log("OVER", d);
 	    this.setState({tooltip: d})
 	}
 
 	handleMouseLeave() {
-		console.log("LEAVE");
 	    this.setState({tooltip: null})
 	}
 
@@ -137,7 +74,7 @@ class WorldMap extends React.Component {
 
        	// let time = Date.now();
        	const rotate = [0, 0];
-	   	const velocity = [.008, -0];
+	   	const velocity = [.002, -0];
 	   	this.setState({startedSpinning : true});
    	   	timer(function() {
 		      if(objState.state.startedSpinning) {
@@ -179,7 +116,6 @@ class WorldMap extends React.Component {
 												onClick={ () => this.handleCountryClick(d) }
 												onMouseEnter={ () => this.handleMouseEnter(d) }
 												onMouseLeave={ this.handleMouseLeave }
-												
       							   			/>
 										)
       							   	});	
@@ -195,21 +131,19 @@ class WorldMap extends React.Component {
 										)
       							   	});	
 
-      	let tooltip = null;
+
+   		let tooltip = null;
       	if(this.state.tooltip) {
-      		let [x,y] = this.geoGenerator.centroid(this.state.tooltip);
 			let tooltipData = {
-				x: x, 
-				y: y, 
-				label: this.state.tooltip.properties.name
+				x: this.geoGenerator.centroid(this.state.tooltip)[0], 
+				y: this.geoGenerator.centroid(this.state.tooltip)[1], 
+				d: this.state.tooltip
 			};
-			tooltip = <Tooltips tooltip={tooltipData} />;
-			console.log(tooltipData);
-      	}
+			tooltip = <InfoBox tooltip={tooltipData} />;
+      	} 
       	
 		return (
-
-			<svg width="820" height="620">
+			<svg width={defaultSize} height={defaultSize}>
 				<circle className="circle" cx={this.translateX} cy={this.translateY} r="300" fill="#1C70C8"></circle>
 				{countries}
 				{labels}
@@ -224,7 +158,7 @@ class Countries extends React.Component {
 		return(
 			<g>
 				<path className= "country" key= {this.props.key} d={this.props.d}
-					  fill= {this.props.fill} stroke= "#FFFFFF" strokeWidth ="0.5"
+					  fill= {this.props.fill} stroke= "#FFFFFF" strokeWidth ="1"
 					  onClick={this.props.onClick} onMouseEnter={this.props.onMouseEnter} onMouseLeave={this.props.onMouseLeave}>
 				</path> 				
 			</g>
@@ -252,18 +186,77 @@ class Labels extends React.Component {
 	}
 }
 
-class Tooltips extends React.Component {
+
+class InfoBox extends React.Component {
+  render() {
+  	let {tooltip} = this.props;
+  	let {x, y, d} = tooltip;
+
+  	let countryName = d.properties.name;
+	let width = countryName.length * 12;
+	const height = 40;
+
+	let offsetX = width;
+	let offsetY = -height;
+
+	const maxTop = defaultSize * 0.6;
+	const maxBottom = defaultSize * 0.4; 
+	const maxLeft = defaultSize * 0.6;
+	const maxRight = defaultSize * 0.4;
+
+	if(y > maxTop) {
+		offsetY = -height;
+	} else if (y < maxBottom) {
+		offsetY = height;
+	}
+
+	if(x > maxRight) {
+		offsetX = -width;
+	} else if (x < maxLeft) {
+		offsetX = width/2;
+	}
+	
+    return(
+    	<svg style={{pointerEvents: "none"}}>
+	    	<Rectangle 
+	    		x={x - width/4  + offsetX}
+	    		y={y + offsetY}
+	    		width={width}
+	    		height={height}
+	    	/>
+	    	<InfoText
+	    		x={x + width/4 + offsetX}
+	    		y={y + height/2 + offsetY}
+	    		countryName={countryName}
+	    	/>
+	    </svg>
+    ) 
+  } 
+}
+
+
+class Rectangle extends React.Component {
+  render() {
+    let {x, y, width, height} = this.props;
+    return (
+    	<rect x={x} y={y} height={height} width={width}></rect>
+    )
+  }
+  
+}
+
+
+class InfoText extends React.Component {
 	render() {
-		let { tooltip } = this.props;
-    	let { x, y, label } = tooltip;
-		return (
-			<g style={{pointerEvents: "none"}}>
-				<rect x={x+20} y={y-30} height="30" width="60"></rect>
-				<text x={x+40} y={y-10} textAnchor="middle" alignmentBaseline="middle" style={{"color": "white"}}> {label} </text>
-			</g>
+		let {x, y, countryName} = this.props;
+		return(
+			<text x={x} y={y} textAnchor="middle" alignmentBaseline="middle"> {countryName} </text>
 		)
 	}
 }
+
+
+
 
 
 export default WorldMap;
