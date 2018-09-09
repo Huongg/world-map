@@ -15,6 +15,7 @@ class WorldMap extends React.Component {
 			timeDelta: 0,
 			startTime: Date.now(),
 			startedSpinning: false,
+			hover: false,
 			tooltip: null
 		};
 		this.translateX = defaultSize/2 + 100;
@@ -60,11 +61,17 @@ class WorldMap extends React.Component {
 
 
 	handleMouseEnter(d) {
-	    this.setState({tooltip: d})
+	    this.setState({
+	    	tooltip: d,
+	    	// hover: true
+	    })
 	}
 
 	handleMouseLeave() {
-	    this.setState({tooltip: null})
+	    this.setState({
+	    	tooltip: null,
+	    	// hover: false
+	    })
 	}
 
     initSpinner() {
@@ -157,8 +164,8 @@ class Countries extends React.Component {
 	render() {
 		return(
 			<g>
-				<path className= "country" key= {this.props.key} d={this.props.d}
-					  fill= {this.props.fill} stroke= "#FFFFFF" strokeWidth ="1"
+				<path className= "country" key= {this.props.key} d={this.props.d} stroke= "#FFFFFF" strokeWidth ="1"
+					  fill= {this.props.fill} 
 					  onClick={this.props.onClick} onMouseEnter={this.props.onMouseEnter} onMouseLeave={this.props.onMouseLeave}>
 				</path> 				
 			</g>
